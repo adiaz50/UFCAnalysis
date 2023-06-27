@@ -79,8 +79,7 @@ def main():
     ctrlTimeCount = 0
     # we got the number of rounds ranges from 1-5 (KO's, )
 
-    # identify the end of the round 
-    # include NULL to the columns in which the round does not exist
+    # populate the list for boutdetails1 and boutdetails2
     for j in range(0, len(all_data)):
         if all_data[j] != []:
             for i in range(0, len(all_data[j]),2):
@@ -99,43 +98,49 @@ def main():
                             continue
                 
                 boutDetails2.append(all_data[j][i])
-    x = 0
-    y = 2
-    t = [x, "Marvin Vettori", "opponent", "STUFFS"]
-    beforeCtrlTime = 9
-    afterCtrlTime = 8
+    # x = 0
+    # y = 2
+    # t = [x, "Marvin Vettori", "opponent", "STUFFS"]
+    # beforeCtrlTime = 9
+    # afterCtrlTime = 8
     intRound = int(round)
-    totalRounds = 6
-    roundDiff = 0
-    roundDiff = totalRounds - (intRound+1)
+    # totalRounds = 6
+    # roundDiff = 0
+    # roundDiff = totalRounds - (intRound+1)
 
-    print(intRound)
+    # print(intRound)
 
-    bout1 = boutDetails1
+    # bout1 = boutDetails1
 
-    # FILL IN THE MISSING COLUMNS FOR FIRST PART
-    for element in range(0, len(bout1)):
-        # Check element to count for "*:**" format
-        if bout1[element] == None:
-            continue
-        elif r.search(bout1[element]):
-            ctrlTimeCount += 1
+    # # FILL IN THE MISSING COLUMNS FOR FIRST PART
+    # for element in range(0, len(bout1)):
+    #     # Check element to count for "*:**" format
+    #     if bout1[element] == None:
+    #         continue
+    #     elif r.search(bout1[element]):
+    #         ctrlTimeCount += 1
 
-        if ctrlTimeCount == intRound+1 and x != 1:
-            x = 1
-            # we need the difference between the number of rounds and the total number of rounds
-            # rounds is 1 but plus 1 is two the total is 6 so the difference is 4 
-            # for every round there are 9 values in between so 4 * 9 = 36 
-            if roundDiff < 6 and roundDiff > 1:
-                for i in range(0, (roundDiff*9)):
-                    boutDetails1.insert(element+1, None)
+    #     if ctrlTimeCount == intRound+1 and x != 1:
+    #         x = 1
+    #         # we need the difference between the number of rounds and the total number of rounds
+    #         # rounds is 1 but plus 1 is two the total is 6 so the difference is 4 
+    #         # for every round there are 9 values in between so 4 * 9 = 36 
+    #         if roundDiff < 6 and roundDiff > 1:
+    #             for i in range(0, (roundDiff*9)):
+    #                 boutDetails1.insert(element+1, None)
 
-    # FILL IN THE MISSING COLUMNS FOR SECOND PART
-    for element in range(len(boutDetails1), 108):
-        boutDetails1.insert(element+1, None)
+    # # FILL IN THE MISSING COLUMNS FOR SECOND PART
+    # for element in range(len(boutDetails1), 108):
+    #     boutDetails1.insert(element+1, None)
 
-    print(boutDetails1, len(boutDetails1))
+    # print(boutDetails1, len(boutDetails1))
     # print("BOUT2:", boutDetails2, len(boutDetails2)) 
+
+    boutDetails1 = fillInFuncs(intRound, boutDetails1)
+    print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
+    boutDetails2 = fillInFuncs(intRound, boutDetails2)
+    print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
+
 
     df = pd.DataFrame([], columns=range(108))
 
@@ -146,16 +151,19 @@ def main():
     print(df)
 
 # fix the function LITERAL ANSWER IS ABOVE!!!
-def fillInFuncs(bout, intRound):
+def fillInFuncs(intRound, boutDetails1):
     x = 0
     y = 2
     t = [x, "Marvin Vettori", "opponent", "STUFFS"]
     beforeCtrlTime = 9
     afterCtrlTime = 8
-    intRound = int(round)
+    # intRound = int(round)
     totalRounds = 6
     roundDiff = 0
     roundDiff = totalRounds - (intRound+1)
+    r = re.compile("[*:**]")
+    ctrlTimeCount = 0
+    bout = boutDetails1
 
     print(intRound)
 
@@ -179,6 +187,7 @@ def fillInFuncs(bout, intRound):
     # FILL IN THE MISSING COLUMNS FOR SECOND PART
     for element in range(len(boutDetails1), 108):
         boutDetails1.insert(element+1, None)
+    return boutDetails1
 
 main()
 # url = 'https://www.espn.com/nba/player/gamelog/_/id/3012/kyle-lowry'
