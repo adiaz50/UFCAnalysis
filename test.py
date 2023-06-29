@@ -3,9 +3,10 @@ import pandas as pd
 from bs4 import BeautifulSoup
 import re 
 from openpyxl.workbook import Workbook
+import sqlalchemy
 
 
-def main():
+def workingCode():
     url = 'http://ufcstats.com/fight-details/175d9e1ac0725145'
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
     columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
@@ -15,11 +16,11 @@ def main():
                'RND4.KD','RND4.SIG.LAND', 'RND4.SIG.THROWN', 'RND4.SIG.STR%','RND4.STR.LAND', 'RND4.STR.THROWN','RND4.TD.LAND', 'RND4.TD.THROWN','RND4.TD%','RND4.SUB.ATT','RND4.REV','RND4.CTRL',
                'RND5.KD','RND5.SIG.LAND', 'RND5.SIG.THROWN', 'RND5.SIG.STR%','RND5.STR.LAND', 'RND5.STR.THROWN','RND5.TD.LAND', 'RND5.TD.THROWN','RND5.TD%','RND5.SUB.ATT','RND5.REV','RND5.CTRL',
                'REPEAT','REPEAT','REPEAT','TOTAL.HEAD.LAND','TOTAL.HEAD.THROWN','TOTAL.BODY.LAND','TOTAL.BODY.THROWN','TOTAL.LEG.LAND','TOTAL.LEG.THROWN','TOTAL.DISTANCE.LAND','TOTAL.DISTANCE.THROWN','TOTAL.CLINCH.LAND','TOTAL.CLINCH.THROWN','TOTAL.GROUND.LAND','TOTAL.GROUND.THROWN',
-               'REPEAT','REPEAT','REPEAT','RND1.HEAD.LAND','RND1.HEAD.THROWN','RND1.BODY.LAND','RND1.BODY.THROWN','RND1.LEG.LAND','RND1.LEG.THROWN','RND1.DISTANCE.LAND','RND1.DISTANCE.THROWN','RND1.CLINCH.LAND','RND1.CLINCH.THROWN','RND1.GROUND.LAND','TOTAL.GROUND.THROWN',
-               'REPEAT','REPEAT','REPEAT','RND2.HEAD.LAND','RND2.HEAD.THROWN','RND2.BODY.LAND','RND2.BODY.THROWN','RND2.LEG.LAND','RND2.LEG.THROWN','RND2.DISTANCE.LAND','RND2.DISTANCE.THROWN','RND2.CLINCH.LAND','RND2.CLINCH.THROWN','RND2.GROUND.LAND','TOTAL.GROUND.THROWN',
-               'REPEAT','REPEAT','REPEAT','RND3.HEAD.LAND','RND3.HEAD.THROWN','RND3.BODY.LAND','RND3.BODY.THROWN','RND3.LEG.LAND','RND3.LEG.THROWN','RND3.DISTANCE.LAND','RND3.DISTANCE.THROWN','RND3.CLINCH.LAND','RND3.CLINCH.THROWN','RND3.GROUND.LAND','TOTAL.GROUND.THROWN',
-               'REPEAT','REPEAT','REPEAT','RND4.HEAD.LAND','RND4.HEAD.THROWN','RND4.BODY.LAND','RND4.BODY.THROWN','RND4.LEG.LAND','RND4.LEG.THROWN','RND4.DISTANCE.LAND','RND4.DISTANCE.THROWN','RND4.CLINCH.LAND','RND4.CLINCH.THROWN','RND4.GROUND.LAND','TOTAL.GROUND.THROWN',
-               'REPEAT','REPEAT','REPEAT','RND5.HEAD.LAND','RND5.HEAD.THROWN','RND5.BODY.LAND','RND5.BODY.THROWN','RND5.LEG.LAND','RND5.LEG.THROWN','RND5.DISTANCE.LAND','RND5.DISTANCE.THROWN','RND5.CLINCH.LAND','RND5.CLINCH.THROWN','RND5.GROUND.LAND','TOTAL.GROUND.THROWN']
+               'REPEAT','REPEAT','REPEAT','RND1.HEAD.LAND','RND1.HEAD.THROWN','RND1.BODY.LAND','RND1.BODY.THROWN','RND1.LEG.LAND','RND1.LEG.THROWN','RND1.DISTANCE.LAND','RND1.DISTANCE.THROWN','RND1.CLINCH.LAND','RND1.CLINCH.THROWN','RND1.GROUND.LAND','RND1.GROUND.THROWN',
+               'REPEAT','REPEAT','REPEAT','RND2.HEAD.LAND','RND2.HEAD.THROWN','RND2.BODY.LAND','RND2.BODY.THROWN','RND2.LEG.LAND','RND2.LEG.THROWN','RND2.DISTANCE.LAND','RND2.DISTANCE.THROWN','RND2.CLINCH.LAND','RND2.CLINCH.THROWN','RND2.GROUND.LAND','RND2.GROUND.THROWN',
+               'REPEAT','REPEAT','REPEAT','RND3.HEAD.LAND','RND3.HEAD.THROWN','RND3.BODY.LAND','RND3.BODY.THROWN','RND3.LEG.LAND','RND3.LEG.THROWN','RND3.DISTANCE.LAND','RND3.DISTANCE.THROWN','RND3.CLINCH.LAND','RND3.CLINCH.THROWN','RND3.GROUND.LAND','RND3.GROUND.THROWN',
+               'REPEAT','REPEAT','REPEAT','RND4.HEAD.LAND','RND4.HEAD.THROWN','RND4.BODY.LAND','RND4.BODY.THROWN','RND4.LEG.LAND','RND4.LEG.THROWN','RND4.DISTANCE.LAND','RND4.DISTANCE.THROWN','RND4.CLINCH.LAND','RND4.CLINCH.THROWN','RND4.GROUND.LAND','RND4.GROUND.THROWN',
+               'REPEAT','REPEAT','REPEAT','RND5.HEAD.LAND','RND5.HEAD.THROWN','RND5.BODY.LAND','RND5.BODY.THROWN','RND5.LEG.LAND','RND5.LEG.THROWN','RND5.DISTANCE.LAND','RND5.DISTANCE.THROWN','RND5.CLINCH.LAND','RND5.CLINCH.THROWN','RND5.GROUND.LAND','RND5.GROUND.THROWN']
     print(len(columns))
     all_data = []
     info1 = []
@@ -67,17 +68,9 @@ def main():
     half1 = [fighter1[1:], fighter1[0], fighter2[1:]]
     half2 = [fighter2[1:], fighter2[0], fighter1[1:]]
     
-    boutDetails1 = half1
-    boutDetails1.append(method)
-    boutDetails1.append(round)
-    boutDetails1.append(referee)
-    boutDetails2 = half2
-    boutDetails2.append(method)
-    boutDetails2.append(round)
-    boutDetails2.append(referee)
-    # print(boutDetails1)
-    # print(boutDetails2)
-    # print(all_data)
+    # give boutDetails1 and 2 the fighter name, method, round and ref
+    boutDetails1 = boutDetails(half1, method, round, referee)
+    boutDetails2 = boutDetails(half2, method, round, referee)
     
     ofRex = re.compile("[* of *]")
     tempOf = ""
@@ -132,27 +125,37 @@ def main():
     if intRound != 5:
         print("IFSTATEMENT:" )
         boutDetails1 = fillInFuncs(intRound, boutDetails1)
-        print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
+        # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
         boutDetails2 = fillInFuncs(intRound, boutDetails2)
         # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
     
     # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
-    print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
+    # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
 
 
     df = pd.DataFrame([], columns=columns)
 
             #look into DF.CONCAT
-    # df = df.append(pd.Series(boutDetails1, index=df.columns[:len(boutDetails1)]), ignore_index=True)
-    # df = df.append(pd.Series(boutDetails2, index=df.columns[:len(boutDetails2)]), ignore_index=True)
-
+    df = df.append(pd.Series(boutDetails1, index=df.columns[:len(boutDetails1)]), ignore_index=True)
+    df = df.append(pd.Series(boutDetails2, index=df.columns[:len(boutDetails2)]), ignore_index=True)
+    df.drop(columns=['REPEAT'], inplace=True)
     # Removed more than just repeat!! 
     # df = df.loc[:,~df.T.duplicated(keep=False)]
     #DROP THEM IN SQL MIGHT BE BEST
     # df = df.loc[:,~df.T.duplicated()]
-    # df.to_excel('test1.xlsx')
     
-    # print(df)
+
+    engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
+    df.to_sql("TESTPY1", engine)
+
+    print(df)
+
+def boutDetails(half, method, round, referee):
+    boutDetails = half
+    boutDetails.append(method)
+    boutDetails.append(round)
+    boutDetails.append(referee)
+    return boutDetails
 
 # fix the function LITERAL ANSWER IS ABOVE!!!
 def fillInFuncs(intRound, boutDetails1):
@@ -189,14 +192,22 @@ def fillInFuncs(intRound, boutDetails1):
 # make extra columns for total strikes thrown and total strikes landed
 # DIDNT ACCOUNT FOR ODD NUMBERS EZ FIX YO!
 def splitOf(string):
-    if len(string) == 6:
-        return [int(string[0]), int(string[5])]
-    elif len(string) == 8:
-        return [int(string[:2]), int(string[6:])]
-    elif len(string) == 10:
-        return [int(string[:3]), int(string[7:])]
-    elif len(string) == 12:
-        return [int(string[:4]), int(string[8:])]
+    if len(string)%2 == 0:
+        if len(string) == 6:
+            return [int(string[0]), int(string[5])]
+        elif len(string) == 8:
+            return [int(string[:2]), int(string[6:])]
+        elif len(string) == 10:
+            return [int(string[:3]), int(string[7:])]
+        elif len(string) == 12:
+            return [int(string[:4]), int(string[8:])]
+    else:
+        if len(string) == 7:
+            return [int(string[0]), int(string[5:])]
+        elif len(string) == 9:
+            return [int(string[:2]), int(string[6:])]
+        elif len(string) == 11:
+            return [int(string[:4]), int(string[7:])]
     
 def castPercentage(string):
     percentage = 0
