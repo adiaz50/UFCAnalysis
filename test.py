@@ -7,7 +7,7 @@ import sqlalchemy
 
 
 def workingCode():
-    url = 'http://ufcstats.com/fight-details/175d9e1ac0725145'
+    url = 'http://ufcstats.com/fight-details/6c2199524d762b11'
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
     columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
                'RND1.KD','RND1.SIG.LAND', 'RND1.SIG.THROWN', 'RND1.SIG.STR%','RND1.STR.LAND', 'RND1.STR.THROWN','RND1.TD.LAND', 'RND1.TD.THROWN','RND1.TD%','RND1.SUB.ATT','RND1.REV','RND1.CTRL',
@@ -108,7 +108,6 @@ def workingCode():
                 if ofRex.search(all_data[j][i]):
                     tempOf = all_data[j][i]
                     ret = splitOf(tempOf)
-                    print(tempOf,ret)
                     boutDetails2.append(ret[0])
                     boutDetails2.append(ret[1])
                     continue
@@ -125,6 +124,7 @@ def workingCode():
     if intRound != 5:
         print("IFSTATEMENT:" )
         boutDetails1 = fillInFuncs(intRound, boutDetails1)
+        print(boutDetails1)
         # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
         boutDetails2 = fillInFuncs(intRound, boutDetails2)
         # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
@@ -145,8 +145,8 @@ def workingCode():
     # df = df.loc[:,~df.T.duplicated()]
     
 
-    engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
-    df.to_sql("TESTPY1", engine)
+    # engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
+    # df.to_sql("TESTPY1", engine)
 
     print(df)
 
@@ -172,7 +172,7 @@ def fillInFuncs(intRound, boutDetails1):
         # Check element to count for "*:**" format
         if bout[element] == None:
             continue
-        elif r.search(bout[element]):
+        elif r.search(str(bout[element])):
             ctrlTimeCount += 1
 
         if ctrlTimeCount == intRound+1 and x != 1:
@@ -185,7 +185,7 @@ def fillInFuncs(intRound, boutDetails1):
                     boutDetails1.insert(element+1, None)
 
     # FILL IN THE MISSING COLUMNS FOR SECOND PART
-    for element in range(len(boutDetails1), 108):
+    for element in range(len(boutDetails1), 168):
         boutDetails1.insert(element+1, None)
     return boutDetails1
 
@@ -218,7 +218,7 @@ def castPercentage(string):
     if len(string) == 4:
         percentage = float(string[:3])/100
     return percentage
-main()
+workingCode()
 # url = 'https://www.espn.com/nba/player/gamelog/_/id/3012/kyle-lowry'
 
 # all_data = []
