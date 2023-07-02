@@ -9,10 +9,10 @@ import sqlalchemy
 def workingCode():
     # 4 rounds done check -/
     # 1 Round done check -/
-    # 2 Rounds 
-    # 3 Rounds 
-    # 5 Rounds 
-    url = 'http://ufcstats.com/fight-details/8b296724a6844865'
+    # 2 Rounds done check -/
+    # 3 Rounds done check -/
+    # 5 Rounds done check -/
+    url = 'http://ufcstats.com/fight-details/5d9a3bfdcd28abb8'
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
     columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
                'RND1.KD','RND1.SIG.LAND', 'RND1.SIG.THROWN', 'RND1.SIG.STR%','RND1.STR.LAND', 'RND1.STR.THROWN','RND1.TD.LAND', 'RND1.TD.THROWN','RND1.TD%','RND1.SUB.ATT','RND1.REV','RND1.CTRL',
@@ -133,7 +133,7 @@ def workingCode():
         # print(boutDetails1)
         print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
         boutDetails2 = fillInFuncs(intRound, boutDetails2)
-        print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
+        # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
     
     # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
     # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
@@ -145,8 +145,8 @@ def workingCode():
             #look into DF.CONCAT
     df = df.append(pd.Series(boutDetails1, index=df.columns[:len(boutDetails1)]), ignore_index=True)
     df = df.append(pd.Series(boutDetails2, index=df.columns[:len(boutDetails2)]), ignore_index=True)
-    df.drop(columns=['REPEAT'], inplace=True)
-    convertToInt(df)
+    # df.drop(columns=['REPEAT'], inplace=True)
+    
     # Removed more than just repeat!! 
     # df = df.loc[:,~df.T.duplicated(keep=False)]
     #DROP THEM IN SQL MIGHT BE BEST
@@ -154,7 +154,7 @@ def workingCode():
     
 
     # engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
-    # df.to_sql("fakeTest3", engine)
+    # df.to_sql("fakeTest4", engine)
     
     print(df)
 
@@ -218,9 +218,9 @@ def fillInFuncs(intRound, boutDetails1):
             # we need the difference between the number of rounds and the total number of rounds
             # rounds is 1 but plus 1 is two the total is 6 so the difference is 4 
             # for every round there are 9 values in between so 4 * 9 = 36 
-            print(ctrlTimeCount,bout[element])
+            # print(ctrlTimeCount,bout[element])
             if roundDiff < 6 and roundDiff >= 1:
-                for i in range(0, (roundDiff*9)):
+                for i in range(0, (roundDiff*12)):
                     boutDetails1.insert(element+1, None)
 
     # FILL IN THE MISSING COLUMNS FOR SECOND PART
