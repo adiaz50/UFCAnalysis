@@ -7,9 +7,14 @@ import sqlalchemy
 
 
 def workingCode():
-    url = 'http://ufcstats.com/fight-details/6c2199524d762b11'
+    # 4 rounds done check -/
+    # 1 Round done check -/
+    # 2 Rounds 
+    # 3 Rounds 
+    # 5 Rounds 
+    url = 'http://ufcstats.com/fight-details/8b296724a6844865'
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
+    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
                'RND1.KD','RND1.SIG.LAND', 'RND1.SIG.THROWN', 'RND1.SIG.STR%','RND1.STR.LAND', 'RND1.STR.THROWN','RND1.TD.LAND', 'RND1.TD.THROWN','RND1.TD%','RND1.SUB.ATT','RND1.REV','RND1.CTRL',
                'RND2.KD','RND2.SIG.LAND', 'RND2.SIG.THROWN', 'RND2.SIG.STR%','RND2.STR.LAND', 'RND2.STR.THROWN','RND2.TD.LAND', 'RND2.TD.THROWN','RND2.TD%','RND2.SUB.ATT','RND2.REV','RND2.CTRL',
                'RND3.KD','RND3.SIG.LAND', 'RND3.SIG.THROWN', 'RND3.SIG.STR%','RND3.STR.LAND', 'RND3.STR.THROWN','RND3.TD.LAND', 'RND3.TD.THROWN','RND3.TD%','RND3.SUB.ATT','RND3.REV','RND3.CTRL',
@@ -55,22 +60,23 @@ def workingCode():
     
     # print(winDetails)
 
-    method = winMethod[1]
-    round = winMethod[2]
-    referee = winMethod[4]
-
+    method = winMethod[1].strip(" ")
+    round = winMethod[2].strip(" ")
+    tempStop = re.split(" ", winMethod[3])
+    timeStopppage = tempStop[1]
+    referee = winMethod[4].strip(" ")
 
     #split the winner and loser
     fighter1 = winnerLoser[0][0]
     fighter2 = winnerLoser[0][1]
 
     # name, who won, opponent 
-    half1 = [fighter1[1:], fighter1[0], fighter2[1:]]
-    half2 = [fighter2[1:], fighter2[0], fighter1[1:]]
+    half1 = [fighter1[1:].strip(), fighter1[0].strip(), fighter2[1:].strip()]
+    half2 = [fighter2[1:].strip(), fighter2[0].strip(), fighter1[1:].strip()]
     
     # give boutDetails1 and 2 the fighter name, method, round and ref
-    boutDetails1 = boutDetails(half1, method, round, referee)
-    boutDetails2 = boutDetails(half2, method, round, referee)
+    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage)
+    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage)
     
     ofRex = re.compile("[* of *]")
     tempOf = ""
@@ -124,13 +130,14 @@ def workingCode():
     if intRound != 5:
         print("IFSTATEMENT:" )
         boutDetails1 = fillInFuncs(intRound, boutDetails1)
-        print(boutDetails1)
-        # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
+        # print(boutDetails1)
+        print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
         boutDetails2 = fillInFuncs(intRound, boutDetails2)
-        # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
+        print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
     
     # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
     # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
+    # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
 
 
     df = pd.DataFrame([], columns=columns)
@@ -139,6 +146,7 @@ def workingCode():
     df = df.append(pd.Series(boutDetails1, index=df.columns[:len(boutDetails1)]), ignore_index=True)
     df = df.append(pd.Series(boutDetails2, index=df.columns[:len(boutDetails2)]), ignore_index=True)
     df.drop(columns=['REPEAT'], inplace=True)
+    convertToInt(df)
     # Removed more than just repeat!! 
     # df = df.loc[:,~df.T.duplicated(keep=False)]
     #DROP THEM IN SQL MIGHT BE BEST
@@ -146,15 +154,45 @@ def workingCode():
     
 
     # engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
-    # df.to_sql("TESTPY1", engine)
-
+    # df.to_sql("fakeTest3", engine)
+    
     print(df)
 
-def boutDetails(half, method, round, referee):
+# Maybe make 2 tables? the first BIGDATA table we transform the columns 
+# into Integers
+# and the automated table wether it is a seperate table or not we 
+# change it through SQL or Python? idk maybe right???? AM I CRAZY??
+# idk maybe i am...
+def convertToInt(df):
+    if df['RND3.KD'] == None:
+        print("WORKS?")
+    # if rounds is not 5
+    # df['KD'] = df['KD'].astype(int)
+    # df['RND1.KD'] = df['RND1.KD'].astype(int)
+    # df['RND2.KD'] = df['RND2.KD'].astype(int)
+    # df['RND3.KD'] = df['RND3.KD'].astype(int)
+    # df['RND4.KD'] = df['RND4.KD'].astype(int)
+    # df['RND5.KD'] = df['RND5.KD'].astype(int)
+    # df['SUB.ATT'] = df['SUB.ATT'].astype(int)
+    # df['RND1.SUB.ATT'] = df['RND1.SUB.ATT'].astype(int)
+    # df['RND2.SUB.ATT'] = df['RND2.SUB.ATT'].astype(int)
+    # df['RND3.SUB.ATT'] = df['RND3.SUB.ATT'].astype(int)
+    # df['RND4.SUB.ATT'] = df['RND4.SUB.ATT'].astype(int)
+    # df['RND5.SUB.ATT'] = df['RND5.SUB.ATT'].astype(int)
+    # df['REV'] = df['REV'].astype(int)
+    # df['RND1.REV'] = df['RND1.REV'].astype(int)
+    # df['RND2.REV'] = df['RND2.REV'].astype(int)
+    # df['RND3.REV'] = df['RND3.REV'].astype(int)
+    # df['RND4.REV'] = df['RND4.REV'].astype(int)
+    # df['RND5.REV'] = df['RND5.REV'].astype(int)
+
+
+def boutDet(half, method, round, referee, timeStop):
     boutDetails = half
     boutDetails.append(method)
     boutDetails.append(round)
     boutDetails.append(referee)
+    boutDetails.append(timeStop)
     return boutDetails
 
 # fix the function LITERAL ANSWER IS ABOVE!!!
@@ -168,24 +206,25 @@ def fillInFuncs(intRound, boutDetails1):
     bout = boutDetails1
 
     # FILL IN THE MISSING COLUMNS FOR FIRST PART
-    for element in range(0, len(bout)):
+    for element in range(7, len(bout)):
         # Check element to count for "*:**" format
         if bout[element] == None:
             continue
         elif r.search(str(bout[element])):
             ctrlTimeCount += 1
-
+        
         if ctrlTimeCount == intRound+1 and x != 1:
             x = 1
             # we need the difference between the number of rounds and the total number of rounds
             # rounds is 1 but plus 1 is two the total is 6 so the difference is 4 
             # for every round there are 9 values in between so 4 * 9 = 36 
-            if roundDiff < 6 and roundDiff > 1:
+            print(ctrlTimeCount,bout[element])
+            if roundDiff < 6 and roundDiff >= 1:
                 for i in range(0, (roundDiff*9)):
                     boutDetails1.insert(element+1, None)
 
     # FILL IN THE MISSING COLUMNS FOR SECOND PART
-    for element in range(len(boutDetails1), 168):
+    for element in range(len(boutDetails1), 169):
         boutDetails1.insert(element+1, None)
     return boutDetails1
 
