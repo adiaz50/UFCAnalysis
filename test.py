@@ -7,14 +7,9 @@ import sqlalchemy
 
 
 def workingCode():
-    # 4 rounds done check -/
-    # 1 Round done check -/
-    # 2 Rounds done check -/
-    # 3 Rounds done check -/
-    # 5 Rounds done check -/
-    url = 'http://ufcstats.com/fight-details/5d9a3bfdcd28abb8'
+    url = 'http://ufcstats.com/fight-details/4b12a4b48755cd6b'
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
+    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'ELO', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
                'RND1.KD','RND1.SIG.LAND', 'RND1.SIG.THROWN', 'RND1.SIG.STR%','RND1.STR.LAND', 'RND1.STR.THROWN','RND1.TD.LAND', 'RND1.TD.THROWN','RND1.TD%','RND1.SUB.ATT','RND1.REV','RND1.CTRL',
                'RND2.KD','RND2.SIG.LAND', 'RND2.SIG.THROWN', 'RND2.SIG.STR%','RND2.STR.LAND', 'RND2.STR.THROWN','RND2.TD.LAND', 'RND2.TD.THROWN','RND2.TD%','RND2.SUB.ATT','RND2.REV','RND2.CTRL',
                'RND3.KD','RND3.SIG.LAND', 'RND3.SIG.THROWN', 'RND3.SIG.STR%','RND3.STR.LAND', 'RND3.STR.THROWN','RND3.TD.LAND', 'RND3.TD.THROWN','RND3.TD%','RND3.SUB.ATT','RND3.REV','RND3.CTRL',
@@ -30,6 +25,7 @@ def workingCode():
     all_data = []
     info1 = []
     winnerLoser = []
+    weightData = []
     # print("SOUP", soup.find_all('th', {"class": 'b-fight-details__table-row'}))
     for row in soup.find_all('tr', {"class": 'b-fight-details__table-row'}):
         tds = [td.get_text(strip=True, separator=' ') for td in row.find_all('p',{"class": 'b-fight-details__table-text'})]
@@ -44,13 +40,17 @@ def workingCode():
         info = [td.get_text(strip=True, separator=' ') for td in row.find_all("div", {"class": "b-fight-details__person"})]
         winnerLoser.append(info)
 
+    for row in soup.find_all('div', {'class': 'b-fight-details__fight-head'} ):
+        weightInfo = [td.get_text(strip=True, separator=' ') for td in row.find_all("i", {"class": "b-fight-details__fight-title"})]
+        weightData.append(weightInfo[0])
+
     method = []
     round = []
     half1 = []
     half2 = []
     boutDetails1 = []
     boutDetails2 = []
-
+    print(weightData)
     # splitting Winning details
     winMethod = re.split("[A-Z]+[a-z]+:", info1[0][0])
     if(re.search("[\d]", info1[0][1]) == "None"):
@@ -71,16 +71,36 @@ def workingCode():
     fighter2 = winnerLoser[0][1]
 
     # name, who won, opponent 
-    half1 = [fighter1[1:].strip(), fighter1[0].strip(), fighter2[1:].strip()]
-    half2 = [fighter2[1:].strip(), fighter2[0].strip(), fighter1[1:].strip()]
+    name1 = fighter1[1:].strip()
+    winLoss1 = fighter1[0].strip()
+    oppo1 = fighter2[1:].strip()
+
+    name2 = fighter2[1:].strip()
+    winLoss2 = fighter2[0].strip()
+    oppo2 = fighter1[1:].strip()
+
+    half1 = [name1, winLoss1, oppo1]
+    half2 = [name2, winLoss2, oppo2]
     
+    # call ELO FUNCTION HEA
+    dic = {}
+    fillDic(dic, name1, oppo1, winLoss1, method)
+    fillDic(dic, name2, oppo2, winLoss2, method)
+    fighter1Elo = dic[name1]
+    fighter2Elo = dic[name2]
+    print(dic)
+
     # give boutDetails1 and 2 the fighter name, method, round and ref
-    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage)
-    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage)
+    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage, int(fighter1Elo[1]))
+    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage, int(fighter2Elo[1]))
     
     ofRex = re.compile("[* of *]")
     tempOf = ""
     percRex= re.compile("[*%]")
+
+    
+
+
     # populate the list for boutdetails1 and boutdetails2
     for j in range(0, len(all_data)):
         if all_data[j] != []:
@@ -127,16 +147,17 @@ def workingCode():
 
     intRound = int(round)
 
+
     if intRound != 5:
         print("IFSTATEMENT:" )
         boutDetails1 = fillInFuncs(intRound, boutDetails1)
         # print(boutDetails1)
-        print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
+        # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
         boutDetails2 = fillInFuncs(intRound, boutDetails2)
         # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
     
-    # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
-    # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
+    print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
+    print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
     # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
 
 
@@ -157,6 +178,120 @@ def workingCode():
     # df.to_sql("fakeTest4", engine)
     
     print(df)
+
+# pass in dictionary 
+# check to see if fighter is already in dictionary if not insert new fighter
+# dictionary = {fighter: elo, ...,}
+# IF OPPONENT IS NOT IN DICT compare by default 1200!!!!
+def fillDic(dic, name, opponentName, winLoss, winMethod):
+
+    if name in dic:
+        prevElo = dic[name][0]
+        
+        if opponentName in dic:
+            newElo = callEloFunc(prevElo, winMethod, dic[opponentName][0], winLoss)
+        else:
+            newElo = callEloFunc(prevElo, winMethod, 1200, winLoss)
+        if len(dic[name]) == 2:
+            dic[name][0] = newElo
+            dic[name][1] = newElo
+        else:
+            dic[name].append(newElo)
+    else:
+        defaultElo = 1200
+        dic[name] = [defaultElo]
+        if opponentName in dic:
+            newElo = callEloFunc(defaultElo, winMethod, dic[opponentName][0], winLoss)
+        else:
+            newElo = callEloFunc(defaultElo, winMethod, defaultElo, winLoss)
+            
+        dic[name].append(newElo)
+
+# what we need from dictionary
+# 1) fighter, opponent
+# 2) win Method 
+# 3) winner
+# 4) previous Elo
+
+
+# Include opponent Elo if win/Draw against someone higher more points + winmethod
+# if lose against someone Higher Elo lose a few points + winmethod
+# if win against someone lower elo win a few points + winMethod
+# if lose/Draw against someone lower elo lose more points + winMethod
+
+def callEloFunc(prevElo, winMethod, opponentElo, winLoss):
+    if winLoss == 'W':
+        winnerElo = prevElo
+        loserElo = opponentElo
+        fix = sum(margin(winMethod, loserElo, winnerElo))
+        winner = prevElo + 1 + fix + (inflation(loserElo, winnerElo) * (1 - expected(loserElo, winnerElo)))
+        return winner
+    elif winLoss == 'L':
+        winnerElo = opponentElo
+        loserElo = prevElo
+        fix = margin(winMethod, loserElo, winnerElo)
+        subElo = fix[1] * -1.5
+        subElo += fix[0]
+        winner = prevElo + 1 + subElo + (inflation(loserElo, winnerElo) * (1 - expected(loserElo, winnerElo)))
+        return winner
+    else:
+        winnerElo = opponentElo
+        loserElo = prevElo
+        winner = prevElo + 1 + 1 + (inflation(loserElo, winnerElo) * (1 - expected(loserElo, winnerElo)))
+        return winner
+
+# go more into depth regarding the amount of points difference between fighters
+def margin(winMethod, loserElo, winnerElo):
+    diffElo = loserElo - winnerElo
+    newElo = eloDifference(diffElo)
+    print("MARGIN", winMethod, newElo)
+    if winMethod == "Decision - Split" or winMethod == "Decision - Unanimous" or winMethod == "DQ" or winMethod == "Decision - Majority":
+        return [newElo, 3]
+    elif winMethod == "KO/TKO" or winMethod == "Submission" or winMethod == "TKO - Doctor's Stoppage":
+        return [newElo, 5]
+    # Overturned and Could not continue
+    else:
+        return [0,0]
+
+def eloDifference(diffElo):
+    # if winner has more elo than loser
+    newElo = 0
+    if diffElo < 0:
+        diffElo = diffElo*-1
+        if diffElo > 100:
+            newElo = 1
+        elif diffElo < 100 and diffElo > 75:
+            newElo = 3
+        elif diffElo < 75 and diffElo > 50:
+            newElo = 4
+        elif diffElo < 50 and diffElo > 25:
+            newElo = 6
+        elif diffElo < 25 and diffElo > 0:
+            newElo = 7
+    # if winner has less elo than loser 
+    elif diffElo > 0:
+        if diffElo > 100:
+            newElo = 11
+        elif diffElo < 100 and diffElo > 75:
+            newElo = 7
+        elif diffElo < 75 and diffElo > 50:
+            newElo = 6
+        elif diffElo < 50 and diffElo > 25:
+            newElo = 4
+        elif diffElo < 25 and diffElo > 0:
+            newElo = 3
+    return newElo
+
+
+def inflation(loserElo, winnerElo):
+    print("INFLATION: ", loserElo, winnerElo)
+    return 1/(1 - ((loserElo - winnerElo) / 2200))
+
+def expected(loserElo, winnerElo):
+    exponent = (loserElo - winnerElo) / 400.0
+    return 1 / ((10.0 ** (exponent)) + 1)
+
+
 
 # Maybe make 2 tables? the first BIGDATA table we transform the columns 
 # into Integers
@@ -187,12 +322,13 @@ def convertToInt(df):
     # df['RND5.REV'] = df['RND5.REV'].astype(int)
 
 
-def boutDet(half, method, round, referee, timeStop):
+def boutDet(half, method, round, referee, timeStop, elo):
     boutDetails = half
     boutDetails.append(method)
     boutDetails.append(round)
     boutDetails.append(referee)
     boutDetails.append(timeStop)
+    boutDetails.append(elo)
     return boutDetails
 
 # fix the function LITERAL ANSWER IS ABOVE!!!
@@ -224,7 +360,7 @@ def fillInFuncs(intRound, boutDetails1):
                     boutDetails1.insert(element+1, None)
 
     # FILL IN THE MISSING COLUMNS FOR SECOND PART
-    for element in range(len(boutDetails1), 169):
+    for element in range(len(boutDetails1), 170):
         boutDetails1.insert(element+1, None)
     return boutDetails1
 
