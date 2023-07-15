@@ -5,11 +5,17 @@ import re
 from openpyxl.workbook import Workbook
 import sqlalchemy
 
+def something():
+    dic = {'Jan Blachowicz': [1225, 1225], 
+           'Magomed Ankalaev': [1210, 1210]}
+    for i in range(0,5):
+        dic = workingCode(dic)[1]
+    print(dic)
 
-def workingCode():
-    url = 'http://ufcstats.com/fight-details/4b12a4b48755cd6b'
+def workingCode(dic):
+    url = 'http://ufcstats.com/fight-details/3c3a9c1ec0604fc2'
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
-    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'ELO', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
+    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'ELO', 'TOTALROUNDS', 'TITLEFIGHTS', 'WEIGHTCLASS', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
                'RND1.KD','RND1.SIG.LAND', 'RND1.SIG.THROWN', 'RND1.SIG.STR%','RND1.STR.LAND', 'RND1.STR.THROWN','RND1.TD.LAND', 'RND1.TD.THROWN','RND1.TD%','RND1.SUB.ATT','RND1.REV','RND1.CTRL',
                'RND2.KD','RND2.SIG.LAND', 'RND2.SIG.THROWN', 'RND2.SIG.STR%','RND2.STR.LAND', 'RND2.STR.THROWN','RND2.TD.LAND', 'RND2.TD.THROWN','RND2.TD%','RND2.SUB.ATT','RND2.REV','RND2.CTRL',
                'RND3.KD','RND3.SIG.LAND', 'RND3.SIG.THROWN', 'RND3.SIG.STR%','RND3.STR.LAND', 'RND3.STR.THROWN','RND3.TD.LAND', 'RND3.TD.THROWN','RND3.TD%','RND3.SUB.ATT','RND3.REV','RND3.CTRL',
@@ -50,15 +56,22 @@ def workingCode():
     half2 = []
     boutDetails1 = []
     boutDetails2 = []
-    print(weightData)
+    totalRounds = []
+    titleFights = []
+    weightClass = []
+    weightT = []
+
+    weight = weightData[0].split(' ')
+    weightT = weightTitle(weight)
+    titleFights = weightT[1]
+    weightClass = weightT[0]
+
     # splitting Winning details
     winMethod = re.split("[A-Z]+[a-z]+:", info1[0][0])
-    if(re.search("[\d]", info1[0][1]) == "None"):
-        print("IDK")
-    # if re.search("[\d]", info1[0][1]).group().isdigit():
-    #     winDetails = re.split("[:]", info1[0][1])
-    
-    # print(winDetails)
+
+    totalRounds = winMethod[3].split(' ')
+    totalRounds = totalRounds[4]
+    # print("TOTALROUNDS: ", totalRounds)
 
     method = winMethod[1].strip(" ")
     round = winMethod[2].strip(" ")
@@ -83,16 +96,15 @@ def workingCode():
     half2 = [name2, winLoss2, oppo2]
     
     # call ELO FUNCTION HEA
-    dic = {}
     fillDic(dic, name1, oppo1, winLoss1, method)
     fillDic(dic, name2, oppo2, winLoss2, method)
     fighter1Elo = dic[name1]
     fighter2Elo = dic[name2]
-    print(dic)
+    # print(dic)
 
     # give boutDetails1 and 2 the fighter name, method, round and ref
-    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage, int(fighter1Elo[1]))
-    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage, int(fighter2Elo[1]))
+    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage, int(fighter1Elo[1]), totalRounds, titleFights, weightClass)
+    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage, int(fighter2Elo[1]), totalRounds, titleFights, weightClass)
     
     ofRex = re.compile("[* of *]")
     tempOf = ""
@@ -177,7 +189,8 @@ def workingCode():
     # engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
     # df.to_sql("fakeTest4", engine)
     
-    print(df)
+    # print(df)
+    return [1,dic]
 
 # pass in dictionary 
 # check to see if fighter is already in dictionary if not insert new fighter
@@ -301,34 +314,44 @@ def expected(loserElo, winnerElo):
 def convertToInt(df):
     if df['RND3.KD'] == None:
         print("WORKS?")
-    # if rounds is not 5
-    # df['KD'] = df['KD'].astype(int)
-    # df['RND1.KD'] = df['RND1.KD'].astype(int)
-    # df['RND2.KD'] = df['RND2.KD'].astype(int)
-    # df['RND3.KD'] = df['RND3.KD'].astype(int)
-    # df['RND4.KD'] = df['RND4.KD'].astype(int)
-    # df['RND5.KD'] = df['RND5.KD'].astype(int)
-    # df['SUB.ATT'] = df['SUB.ATT'].astype(int)
-    # df['RND1.SUB.ATT'] = df['RND1.SUB.ATT'].astype(int)
-    # df['RND2.SUB.ATT'] = df['RND2.SUB.ATT'].astype(int)
-    # df['RND3.SUB.ATT'] = df['RND3.SUB.ATT'].astype(int)
-    # df['RND4.SUB.ATT'] = df['RND4.SUB.ATT'].astype(int)
-    # df['RND5.SUB.ATT'] = df['RND5.SUB.ATT'].astype(int)
-    # df['REV'] = df['REV'].astype(int)
-    # df['RND1.REV'] = df['RND1.REV'].astype(int)
-    # df['RND2.REV'] = df['RND2.REV'].astype(int)
-    # df['RND3.REV'] = df['RND3.REV'].astype(int)
-    # df['RND4.REV'] = df['RND4.REV'].astype(int)
-    # df['RND5.REV'] = df['RND5.REV'].astype(int)
 
+def weightTitle(weight):
+    length = len(weight)
+    weightClass = "Open Weight"
+    titleFights = None
+    # 2 normal bout
+    # 3 catch weight light heavyweight bout 
+    # 4 and 5 ufc title bout plus weight 
+    for i in range(len(weight)):
+        if length == 2:
+            if "weight" in weight[i].lower():
+                weightClass = weight[i]
+        elif length == 3:
+            if "weight" in weight[i].lower():
+                weightClass = weight[i-1] +" "+ weight[i]
+        elif length == 4:
+            if "weight" in weight[i].lower():
+                weightClass = weight[i]
+            if "title" == weight[i].lower():
+                titleFights = weight[i]
+        elif length == 5:
+            if "weight" in weight[i].lower():
+                weightClass = weight[i-1] +" "+ weight[i]
+            if "title" == weight[i].lower():
+                titleFights = weight[i]
+    
+    return [weightClass, titleFights]
 
-def boutDet(half, method, round, referee, timeStop, elo):
+def boutDet(half, method, round, referee, timeStop, elo, totalRounds,titleFights, weightClass):
     boutDetails = half
     boutDetails.append(method)
     boutDetails.append(round)
     boutDetails.append(referee)
     boutDetails.append(timeStop)
     boutDetails.append(elo)
+    boutDetails.append(totalRounds)
+    boutDetails.append(titleFights)
+    boutDetails.append(weightClass)
     return boutDetails
 
 # fix the function LITERAL ANSWER IS ABOVE!!!
@@ -360,7 +383,7 @@ def fillInFuncs(intRound, boutDetails1):
                     boutDetails1.insert(element+1, None)
 
     # FILL IN THE MISSING COLUMNS FOR SECOND PART
-    for element in range(len(boutDetails1), 170):
+    for element in range(len(boutDetails1), 173):
         boutDetails1.insert(element+1, None)
     return boutDetails1
 
@@ -393,7 +416,7 @@ def castPercentage(string):
     if len(string) == 4:
         percentage = float(string[:3])/100
     return percentage
-workingCode()
+something()
 # url = 'https://www.espn.com/nba/player/gamelog/_/id/3012/kyle-lowry'
 
 # all_data = []
