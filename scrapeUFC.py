@@ -10,7 +10,7 @@ def main():
     r = requests.get("http://ufcstats.com/statistics/events/completed?page=1")
 
     bs = BeautifulSoup(r.text,"html.parser")
-    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'ELO', 'TOTALROUNDS', 'TITLEFIGHTS', 'WEIGHTCLASS', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
+    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'ELO', 'CURRENTELO','TOTALROUNDS', 'TITLEFIGHTS', 'WEIGHTCLASS', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
                'RND1.KD','RND1.SIG.LAND', 'RND1.SIG.THROWN', 'RND1.SIG.STR%','RND1.STR.LAND', 'RND1.STR.THROWN','RND1.TD.LAND', 'RND1.TD.THROWN','RND1.TD%','RND1.SUB.ATT','RND1.REV','RND1.CTRL',
                'RND2.KD','RND2.SIG.LAND', 'RND2.SIG.THROWN', 'RND2.SIG.STR%','RND2.STR.LAND', 'RND2.STR.THROWN','RND2.TD.LAND', 'RND2.TD.THROWN','RND2.TD%','RND2.SUB.ATT','RND2.REV','RND2.CTRL',
                'RND3.KD','RND3.SIG.LAND', 'RND3.SIG.THROWN', 'RND3.SIG.STR%','RND3.STR.LAND', 'RND3.STR.THROWN','RND3.TD.LAND', 'RND3.TD.THROWN','RND3.TD%','RND3.SUB.ATT','RND3.REV','RND3.CTRL',
@@ -57,20 +57,23 @@ def main():
                         fightLink = row['data-link']
                         print(fightLink)
                         # return list of lists 
-                        list = workingCode(fightLink, dic)
+                        list = workingCode(fightLink, dic, len(columns))
                         dic = list[1]
                         dfLists.append(list[0])
+                        print(dic)
     for i in dfLists:
         for j in i:
             for x in j:
                 df = df.append(pd.Series(x, index=df.columns[:len(x)]), ignore_index=True)
     
-
+    for i in dic.keys():
+        if i in dic:
+            df.loc[(df['FIGHTER']==i), 'CURRENTELO'] = dic[i][1]
 
     engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
     
     df.drop(columns=['REPEAT'], inplace=True)
-    df.to_sql("testingElo", engine)
+    df.to_sql("testingElo2", engine)
     print(df)
         # if i.find_all('a', {'class': 'b-link b-link_style_white'}, href=True):
         #     continue
@@ -96,7 +99,7 @@ def main():
                     
 
 
-def workingCode(url, dic):
+def workingCode(url, dic, columnLength):
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
     all_data = []
     info1 = []
@@ -170,10 +173,12 @@ def workingCode(url, dic):
     fillDic(dic, name2, oppo2, winLoss2, method)
     fighter1Elo = dic[name1]
     fighter2Elo = dic[name2]
+    currentElo1 = 0
+    currentElo2 = 0
 
     # give boutDetails1 and 2 the fighter name, method, round and ref
-    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage, int(fighter1Elo[1]), totalRounds, titleFights, weightClass)
-    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage, int(fighter2Elo[1]), totalRounds, titleFights, weightClass)
+    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage, int(fighter1Elo[1]), int(currentElo1), totalRounds, titleFights, weightClass)
+    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage, int(fighter2Elo[1]), int(currentElo2), totalRounds, titleFights, weightClass)
     
     ofRex = re.compile("[* of *]")
     tempOf = ""
@@ -225,10 +230,9 @@ def workingCode(url, dic):
     intRound = int(round)
 
     if intRound != 5:
-        print("IFSTATEMENT:" )
-        boutDetails1 = fillInFuncs(intRound, boutDetails1)
+        boutDetails1 = fillInFuncs(intRound, boutDetails1, columnLength)
         # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
-        boutDetails2 = fillInFuncs(intRound, boutDetails2)
+        boutDetails2 = fillInFuncs(intRound, boutDetails2, columnLength)
         # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
     
     # print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
@@ -248,7 +252,6 @@ def workingCode(url, dic):
     #DROP THEM IN SQL MIGHT BE BEST
     # df = df.loc[:,~df.T.duplicated()]
     # print("FUNCTION2: ", boutDetails2, "\n", len(boutDetails2))
-    print("FUNCTION1: ", boutDetails1, "\n", len(boutDetails1))
     lists = []
     lists.append([boutDetails1, boutDetails2])
     return [lists, dic]
@@ -319,7 +322,6 @@ def callEloFunc(prevElo, winMethod, opponentElo, winLoss):
 def margin(winMethod, loserElo, winnerElo):
     diffElo = loserElo - winnerElo
     newElo = eloDifference(diffElo)
-    print("MARGIN", winMethod, newElo)
     if winMethod == "Decision - Split" or winMethod == "Decision - Unanimous" or winMethod == "DQ" or winMethod == "Decision - Majority":
         return [newElo, 3]
     elif winMethod == "KO/TKO" or winMethod == "Submission" or winMethod == "TKO - Doctor's Stoppage":
@@ -359,7 +361,6 @@ def eloDifference(diffElo):
 
 
 def inflation(loserElo, winnerElo):
-    print("INFLATION: ", loserElo, winnerElo)
     return 1/(1 - ((loserElo - winnerElo) / 2200))
 
 def expected(loserElo, winnerElo):
@@ -404,19 +405,20 @@ def weightTitle(weight):
     
     return [weightClass, titleFights]
 
-def boutDet(half, method, round, referee, timeStop, elo, totalRounds,titleFights, weightClass):
+def boutDet(half, method, round, referee, timeStop, elo, currentElo, totalRounds,titleFights, weightClass):
     boutDetails = half
     boutDetails.append(method)
     boutDetails.append(round)
     boutDetails.append(referee)
     boutDetails.append(timeStop)
     boutDetails.append(elo)
+    boutDetails.append(currentElo)
     boutDetails.append(totalRounds)
     boutDetails.append(titleFights)
     boutDetails.append(weightClass)
     return boutDetails
 
-def fillInFuncs(intRound, boutDetails1):
+def fillInFuncs(intRound, boutDetails1, columnLength):
     x = 0
     totalRounds = 6
     roundDiff = 0
@@ -442,13 +444,12 @@ def fillInFuncs(intRound, boutDetails1):
             # we need the difference between the number of rounds and the total number of rounds
             # rounds is 1 but plus 1 is two the total is 6 so the difference is 4 
             # for every round there are 9 values in between so 4 * 9 = 36 
-            print(ctrlTimeCount,bout[element])
             if roundDiff < 6 and roundDiff >= 1:
                 for i in range(0, (roundDiff*12)):
                     boutDetails1.insert(element+1, None)
 
     # FILL IN THE MISSING COLUMNS FOR SECOND PART
-    for element in range(len(boutDetails1), 173):
+    for element in range(len(boutDetails1), columnLength):
         boutDetails1.insert(element+1, None)
     return boutDetails1
 
