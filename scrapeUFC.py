@@ -10,7 +10,7 @@ def main():
     r = requests.get("http://ufcstats.com/statistics/events/completed?page=1")
 
     bs = BeautifulSoup(r.text,"html.parser")
-    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'ELO', 'CURRENTELO','TOTALROUNDS', 'TITLEFIGHTS', 'WEIGHTCLASS', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
+    columns = ['FIGHTER', 'W/L', 'OPPONENT', 'METHOD', 'ROUND', 'REFEREE', 'TIMESTOPPAGE', 'DATE', 'ELO', 'CURRENTELO','TOTALROUNDS', 'TITLEFIGHTS', 'WEIGHTCLASS', 'KD', 'TOTAL.SIG.LAND', 'TOTAL.SIG.THROWN','SIG.STR%','TOTAL.STR.LAND', 'TOTAL.STR.THROWN', 'TOTAL.TD.LAND', 'TOTAL.TD.THROWN','TD%','SUB.ATT','REV','CTRL',
                'RND1.KD','RND1.SIG.LAND', 'RND1.SIG.THROWN', 'RND1.SIG.STR%','RND1.STR.LAND', 'RND1.STR.THROWN','RND1.TD.LAND', 'RND1.TD.THROWN','RND1.TD%','RND1.SUB.ATT','RND1.REV','RND1.CTRL',
                'RND2.KD','RND2.SIG.LAND', 'RND2.SIG.THROWN', 'RND2.SIG.STR%','RND2.STR.LAND', 'RND2.STR.THROWN','RND2.TD.LAND', 'RND2.TD.THROWN','RND2.TD%','RND2.SUB.ATT','RND2.REV','RND2.CTRL',
                'RND3.KD','RND3.SIG.LAND', 'RND3.SIG.THROWN', 'RND3.SIG.STR%','RND3.STR.LAND', 'RND3.STR.THROWN','RND3.TD.LAND', 'RND3.TD.THROWN','RND3.TD%','RND3.SUB.ATT','RND3.REV','RND3.CTRL',
@@ -34,6 +34,7 @@ def main():
     dfLists = []
     list = []
     dic = {}
+    date = []
     # NOW THERE ARE 2 IMG AND A CLASSES SO JUST 
     # IF IMG class="b-statistics__icon"
     #   Continue
@@ -45,6 +46,12 @@ def main():
             if("http://ufcstats.com/event-details/" in j['href']):
                 nextPage = requests.get(j['href'])
                 nextPageBs = BeautifulSoup(nextPage.text, "html.parser")
+                # date = nextPageBs.find('ul', {'class': 'b-list__box-list'})
+                date = [f.get_text(strip=True, separator=' ') for f in nextPageBs.find('ul',{'class': 'b-list__box-list'})]
+                date = date[1].split(':')
+                date = date[1].strip()
+                print(date)
+
                 for row in nextPageBs.find_all('tr', onclick=True):
                      if("http://ufcstats.com/fight-details/" in row['data-link']):
                         
@@ -57,7 +64,7 @@ def main():
                         fightLink = row['data-link']
                         print(fightLink)
                         # return list of lists 
-                        list = workingCode(fightLink, dic, len(columns))
+                        list = workingCode(fightLink, dic, len(columns), date)
                         dic = list[1]
                         dfLists.append(list[0])
                         print(dic)
@@ -73,7 +80,7 @@ def main():
     engine = sqlalchemy.create_engine('mssql+pyodbc://MSI\SQLEXPRESS01/UFCData?driver=ODBC Driver 17 for SQL Server')
     
     df.drop(columns=['REPEAT'], inplace=True)
-    df.to_sql("testingElo2", engine)
+    df.to_sql("testingElo3", engine)
     print(df)
         # if i.find_all('a', {'class': 'b-link b-link_style_white'}, href=True):
         #     continue
@@ -99,7 +106,7 @@ def main():
                     
 
 
-def workingCode(url, dic, columnLength):
+def workingCode(url, dic, columnLength, date):
     soup = BeautifulSoup(requests.get(url).text, 'html.parser')
     all_data = []
     info1 = []
@@ -177,8 +184,8 @@ def workingCode(url, dic, columnLength):
     currentElo2 = 0
 
     # give boutDetails1 and 2 the fighter name, method, round and ref
-    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage, int(fighter1Elo[1]), int(currentElo1), totalRounds, titleFights, weightClass)
-    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage, int(fighter2Elo[1]), int(currentElo2), totalRounds, titleFights, weightClass)
+    boutDetails1 = boutDet(half1, method, round, referee, timeStopppage, date, int(fighter1Elo[1]), int(currentElo1), totalRounds, titleFights, weightClass)
+    boutDetails2 = boutDet(half2, method, round, referee, timeStopppage, date, int(fighter2Elo[1]), int(currentElo2), totalRounds, titleFights, weightClass)
     
     ofRex = re.compile("[* of *]")
     tempOf = ""
@@ -405,12 +412,13 @@ def weightTitle(weight):
     
     return [weightClass, titleFights]
 
-def boutDet(half, method, round, referee, timeStop, elo, currentElo, totalRounds,titleFights, weightClass):
+def boutDet(half, method, round, referee, timeStop, date, elo, currentElo, totalRounds,titleFights, weightClass):
     boutDetails = half
     boutDetails.append(method)
     boutDetails.append(round)
     boutDetails.append(referee)
     boutDetails.append(timeStop)
+    boutDetails.append(date)
     boutDetails.append(elo)
     boutDetails.append(currentElo)
     boutDetails.append(totalRounds)
