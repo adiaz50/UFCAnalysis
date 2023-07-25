@@ -33,4 +33,4 @@ npm install sqlalchemy
 ## Acknowledgments
 
 * Inspiration from UFC fighters and the entertainment they give us.
-* Would also like to thank [Andrew Couch](https://github.com/andrew-couch) for the explanations found in his videos.
+* Would also like to thank [Andrew Couch](https://github.com/andrew-couch) for helping me understand certain topics in his videos.
