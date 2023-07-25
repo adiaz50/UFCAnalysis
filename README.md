@@ -2,72 +2,35 @@
 
 A web scraping script used to scrape UFC data from http://ufcstats.com/. 
 
+## Project Description
+
+The scrapeUFC.py script will use BeautifulSoup to parse HTML from [UFCStats](http://ufcstats.com/statistics/events/completed?page=all).
+It will then begin to gather fight stats from each individual fight found in each fight card 
+from the very first ufc event. 
+Once the data has been parsed, the script will begin to clean and append to a list and continue to do so until it is done with each fight.
+When it is done it will upload all of the data to Microsoft SQL Server ready for data validation and exploration.
+
 ## Getting Started
 
 Best if ran with Python version 3.9.15 or higher 
 
 ### Prerequisites
 
-You will need to install the BeautifullSoup, Pandas, re, workbook, sqlalchemy and the requests library.
+You will need to install the BeautifulSoup, Pandas, re, workbook, and the sqlalchemy library.
 
 ```
 npm install BeautifullSoup
+npm install Pandas
+npm install re
+npm install workbook
+npm install sqlalchemy
 ```
-
-### Installing
-
-A step by step series of examples that tell you how to get a development env running
-
-Say what the step will be
-
-```
-Give the example
-```
-
-And repeat
-
-```
-until finished
-```
-
-End with an example of getting some data out of the system or using it for a little demo
-
-## Running the tests
-
-Explain how to run the automated tests for this system
-
-### Break down into end to end tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-### And coding style tests
-
-Explain what these tests test and why
-
-```
-Give an example
-```
-
-## Deployment
-
-Add additional notes about how to deploy this on a live system
-
-## Built With
-
-* [Dropwizard](http://www.dropwizard.io/1.0.2/docs/) - The web framework used
-* [Maven](https://maven.apache.org/) - Dependency Management
-* [ROME](https://rometools.github.io/rome/) - Used to generate RSS Feeds
 
 ## Authors
 
-* **Billie Thompson** - *Initial work* - [PurpleBooth](https://github.com/PurpleBooth)
+* **Axel Diaz** - [adiaz50](https://github.com/adiaz50)
 
 ## Acknowledgments
 
-* Hat tip to anyone whose code was used
-* Inspiration
-* etc
+* Inspiration from UFC fighters and the entertainment they give us.
+* Would also like to thank [Andrew Couch](https://github.com/andrew-couch) for the explanations found in his videos.
